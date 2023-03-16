@@ -154,7 +154,11 @@ def altera(lst):
                 opt=otimizacoes(o)  
                 if(opt!=o):
                     r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],tuple(opt)))))
-                    
+
+        if(lst[1] == "/"):
+            if ("1") == lst[3][1]:
+                return otimizacoes(lst[2])
+
         if(lst[1] == "+"):
             if ("0") == lst[2][1]:
                 return otimizacoes(lst[3])
