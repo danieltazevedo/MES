@@ -3,6 +3,11 @@ from lexer import tokens
 import zipper as zp
 import strategy as st
 
+precedence = (
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE'),
+)
+
 # Definir as regras da gramática
 def p_gramatica(p):
     'gramatica : statement'
@@ -149,11 +154,12 @@ def altera(lst):
                 return otimizacoes(lst[3])
             if ("1") == lst[3][1]:
                 return otimizacoes(lst[2]) 
-            if "binop" == lst[3][0]:  
-                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
+       
+            if "binop" == lst[2][0]:  
+                o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
                 opt=otimizacoes(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))
+                    r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3]))))
 
         if(lst[1] == "/"):
             if ("1") == lst[3][1]:
@@ -164,11 +170,12 @@ def altera(lst):
                 return otimizacoes(lst[3])
             if ("0") == lst[3][1]:
                 return otimizacoes(lst[2])    
-            if "binop" == lst[3][0]:  
-                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
-                opt=otimizacoes(o)
+             
+            if "binop" == lst[2][0]:  
+                o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
+                opt=otimizacoes(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))   
+                    r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3])))) 
         return r
     else:
         return lst
