@@ -1,9 +1,12 @@
 # MES
 
 ***Executar***
+
 pip3 install ply   or  python3 -m pip install ply
 
 python3 parser.py
+
+
 
 
 ***Statements***:
