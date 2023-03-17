@@ -160,6 +160,12 @@ def altera(lst):
                 opt=otimizacoes(o)  
                 if(opt!=o):
                     r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3]))))
+            
+            if "binop" == lst[3][0]:  
+                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
+                opt=otimizacoes(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))
 
         if(lst[1] == "/"):
             if ("1") == lst[3][1]:
@@ -176,6 +182,12 @@ def altera(lst):
                 opt=otimizacoes(o)  
                 if(opt!=o):
                     r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3])))) 
+
+            if "binop" == lst[3][0]:  
+                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
+                opt=otimizacoes(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))
         return r
     else:
         return lst
@@ -183,6 +195,7 @@ def altera(lst):
 def otimizacoes(lst):
     z = zp.obj(lst)
     return st.full_tdTP(lambda x: st.adhocTP(st.idTP, altera, x), z).node()
+
 
 while True:
     try:
