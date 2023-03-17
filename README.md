@@ -11,7 +11,7 @@
 
 ***Statements***:
 
-- atribuição: var=value 					ex: a=1+b
+- atribuição: var=value 				ex: a=1+b
 
 - lista: {statement; statement; .....} 			ex: {a=1;a=a+1;b=a}
 
