@@ -102,7 +102,7 @@ def p_statemen_for(p):
 def p_statement_while(p):
     'statement : WHILE expression statement'
     p[0] = ()
-    p[0] = p[0] + ('if',)
+    p[0] = p[0] + ('while',)
     p[0] = p[0] + (p[2],)
     for i in range(len(p[3])):
         p[0]=p[0]+(p[3][i],)
@@ -183,6 +183,5 @@ while True:
     except EOFError:
         break
     p=parser.parse(s)
-    print(list(p))
     p=otimizacoes(list(p))
     print(p)
