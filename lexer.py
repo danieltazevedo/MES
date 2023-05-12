@@ -14,6 +14,8 @@ tokens = (
     'COMMAPOINT',
     'EQUALS',
     'IDENTIFIER',
+    'TRUE',
+    'FALSE',
     'IF',
     'ELSE',
     'WHILE',
@@ -55,7 +57,15 @@ def t_NUMBER(t):
     return t
 
 def t_IDENTIFIER(t):
-    r'(?!if|else|while|for|define|return\b)[a-zA-Z_][a-zA-Z0-9_]*'
+    r'(?!if|else|while|for|define|return|false|true\b)[a-zA-Z_][a-zA-Z0-9_]*'
+    return t
+
+def t_TRUE(t):
+    r'true'
+    return t
+
+def t_FALSE(t):
+    r'false'
     return t
 
 def t_IF(t):
