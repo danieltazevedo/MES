@@ -2,6 +2,7 @@ import ply.yacc as yacc
 from lexer import tokens
 import zipper as zp
 import strategy as st
+import random
 
 precedence = (
     ('left', 'PLUS', 'MINUS'),
@@ -209,12 +210,15 @@ def make_optimizations(lst):
 def treat_smells(lst):
     if "binop" == lst[0]:
         if(lst[1] == "==" or lst[1] == "!="):
-            if(lst[2][0] == "boolean" and lst[3][0] == "var"): 
+            if((lst[2][0] == "boolean" and lst[3][0] == "var") or (lst[2][0] == "boolean" and lst[3][0] == "call") ): 
                 print("smells detected")
-                return ('var', lst[3][1])
-            if(lst[3][0] == "boolean" and lst[2][0] == "var"):
+                return (lst[3][0], lst[3][1])
+            if((lst[3][0] == "boolean" and lst[2][0] == "var") or (lst[3][0] == "boolean" and lst[2][0] == "call")):
                     print("smells detected")
-                    return ('var', lst[2][1])
+                    return (lst[2][0], lst[2][1])
+    if "function" == lst[0]:
+        if(len(lst)>15):
+            print("smells detected: big function")
     return lst
     
 def otimizacoes(lst):
@@ -295,6 +299,91 @@ def recreate_code(ast):
     else:
         return ''
 
+
+declared_names = []
+
+# Função para gerar um nome válido
+def generate_valid_name():
+    valid_name = ""
+    while True:
+        valid_name = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=1))
+        if valid_name not in declared_names:
+            break
+    return valid_name
+
+
+# Função para gerar uma declaração aleatória
+def generate_declaration():
+    declaration = ""
+    statement_type = random.choice(['assign','list','if','if_else', 'while', 'for'])
+    if statement_type == 'assign':
+        declaration = generate_assign()
+    elif statement_type == 'list':
+        random_number = random.randint(2, 10)
+        declaration = "["
+        for _ in range(random_number):
+            declaration = declaration + generate_assign() + ";"
+        declaration = declaration + "]"
+    elif statement_type == 'if':
+        statement = generate_declaration()
+        cond = generate_cond()
+        declaration = f"if({cond}) {statement}"
+    elif statement_type == 'if_else':
+        statement1 = generate_declaration()
+        statement2 = generate_declaration()
+        cond = generate_cond()
+        declaration = f"if({cond}) {statement1} else {statement2}"
+    elif statement_type == 'while':
+        statement = generate_declaration()
+        cond = generate_cond()
+        declaration = f"while({cond}) {statement}"
+    elif statement_type == 'for':
+        statement = generate_declaration()
+        cond = generate_cond()
+        a1 = generate_assign()
+        a2 = generate_assign()
+        declaration = f"for({a1};{cond};{a2}) {statement}"
+    else:
+        declaration = generate_assign()
+        pass
+    return declaration
+
+def generate_assign():
+    name = generate_valid_name()
+    expression = generate_expression()
+    assingn = f"{name} = {expression}"
+    declared_names.append(name)
+    return assingn
+
+# Função para gerar uma expressão aleatória
+def generate_expression():
+    # Gera uma expressão simples para este exemplo
+    with_operation = random.choice(['true', 'false'])
+    if with_operation == 'true':
+        operation = random.choice(['+', '-','/','*'])
+        value1 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
+        value2 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
+        return value1 + operation + value2
+    else:
+        value = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
+        return str(value)
+    
+def generate_cond():
+    operation = random.choice(['<=', '<','>=','>','==','!='])
+    value1 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
+    value2 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
+    return value1 + operation + value2
+
+def generate_program(number):
+    program = ""
+    for _ in range(number):
+        declaration = generate_declaration()
+        program += declaration + "\n"
+    return program
+
+# Gera e exibe um programa de teste
+test_program = generate_program(2)
+print(test_program)
 
 while True:
     try:
