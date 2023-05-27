@@ -1,8 +1,11 @@
 import ply.yacc as yacc
 from lexer import tokens
 import zipper as zp
-import strategy as st
+import strategy as stra
 import random
+from hypothesis import given
+from hypothesis import strategies as st
+
 
 precedence = (
     ('left', 'PLUS', 'MINUS'),
@@ -79,11 +82,13 @@ def p_statement_if_else(p):
     p[0] = ()
     p[0] = p[0] + ('if_else',)
     p[0] = p[0] + (p[2],)
-    for i in range(len(p[3])):
-        p[0]=p[0]+(p[3][i],)
+    p[0] = p[0] + (p[3],)
+    #for i in range(len(p[3])):
+    #    p[0]=p[0]+(p[3][i],)
     p[0] = p[0] + ('else',)
-    for i in range(len(p[5])):
-        p[0]=p[0]+(p[5][i],)
+    p[0] = p[0] + (p[5],)
+    #for i in range(len(p[5])):
+    #    p[0]=p[0]+(p[5][i],)
 
 
 def p_statement_if(p):
@@ -108,7 +113,6 @@ def p_statemen_for(p):
     for i in range(len(p[9])):
         p[0]=p[0]+(p[9][i],)
 
-    
     
 def p_statement_while(p):
     'statement : WHILE expression statement'
@@ -151,7 +155,7 @@ def p_error(p):
     else:
         print("Syntax error at EOF")
 
-parser = yacc.yacc()
+parser_var = yacc.yacc()
 
 def make_optimizations(lst):
     if "binop" == lst[0]:
@@ -223,175 +227,96 @@ def treat_smells(lst):
     
 def otimizacoes(lst):
     z = zp.obj(lst)
-    return st.full_tdTP(lambda x: st.adhocTP(st.idTP, make_optimizations, x), z).node()
+    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations, x), z).node()
 
 def smells(lst):
     z = zp.obj(lst)
-    return st.full_tdTP(lambda x: st.adhocTP(st.idTP, treat_smells, x), z).node()
+    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, treat_smells, x), z).node()
 
 def recreate_code(ast):
-    node_type = ast[0]
-    if  'assign ' in node_type:
-        if(len(ast)<3):
-            return f'{node_type[len(node_type)-1]} = {recreate_code(ast[1])}'
+    if(len(ast)>0):
+        node_type = ast[0]
+        if  'assign ' in node_type:
+            if(len(ast)<3):
+                return f'{node_type[len(node_type)-1]} = {recreate_code(ast[1])}'
+            else:
+                return f'{node_type[len(node_type)-1]} = {recreate_code(ast[1])} ; {recreate_code(ast[2:])}'
+        elif node_type == 'binop':
+            if(len(ast)<5):
+                return f'{recreate_code(ast[2])} {ast[1]} {recreate_code(ast[3])}'
+            else:
+                return f'{recreate_code(ast[2])} {ast[1]} {recreate_code(ast[3])} ; {recreate_code(ast[4:])}'
+        elif node_type == 'number':
+            if(len(ast)<3):
+                return str(ast[1])
+            else:
+                return f'{ast[1]} ; {recreate_code(ast[2:])}'
+        elif node_type == 'boolean':
+            if(len(ast)<3):
+                return ast[1]
+            else:
+                return f'{ast[1]} ; {recreate_code(ast[2:])}'
+        elif node_type == 'var':
+            if(len(ast)<3):
+                return ast[1]
+            else:
+                return f'{ast[1]} ; {recreate_code(ast[2:])}'
+        elif node_type == 'statement_list': 
+            statements = [recreate_code(child) for child in ast[1:]]
+            return '{' + recreate_code(ast[1:]) + '}'
+        elif node_type == 'if':
+            condition = recreate_code(ast[1])
+            statement = recreate_code(ast[2:])
+            return f'if ({condition}) {statement}'
+        elif node_type == 'if_else':
+            condition = recreate_code(ast[1])
+            index = ast.index("else")
+            elem = ast[2:index]
+            if_statement = recreate_code(list(elem[0]))
+            elem2 = ast[index+1:]
+            else_statement = recreate_code(list(elem2[0]))
+            return f'if ({condition}) {if_statement} else {else_statement}'
+        elif node_type == 'while':
+            condition = recreate_code(ast[1])
+            statement = recreate_code(ast[2:])
+            return f'while ({condition}) {statement}'
+        elif node_type == 'for': 
+            init_statement = recreate_code(ast[1:3])
+            condition = recreate_code(ast[4])
+            post_statement = recreate_code(ast[5:7])
+            statement = recreate_code(ast[7:])
+            return f'for ({init_statement}; {condition}; {post_statement}) {statement}'
+        elif node_type == 'function':
+            name = ast[1]
+            arg_name = ast[2]
+            statement = recreate_code(ast[3:])
+            return f'def {name}({arg_name}): {statement}'
+        elif node_type == 'call': 
+            name = ast[1]
+            if(len(ast)>2):
+                arg = ast[2]
+                return f'{name}({arg})'
+            else:
+                return f'{name}()'
+        elif node_type == 'return':
+            statement = recreate_code(ast[1:])
+            return f'return {statement}'
+        elif node_type == 'expr':
+            return recreate_code(ast[1][0:])
         else:
-            return f'{node_type[len(node_type)-1]} = {recreate_code(ast[1])} ; {recreate_code(ast[2:])}'
-    elif node_type == 'binop':
-        if(len(ast)<5):
-            return f'{recreate_code(ast[2])} {ast[1]} {recreate_code(ast[3])}'
-        else:
-            return f'{recreate_code(ast[2])} {ast[1]} {recreate_code(ast[3])} ; {recreate_code(ast[4:])}'
-    elif node_type == 'number':
-        if(len(ast)<3):
-            return str(ast[1])
-        else:
-            return f'{ast[1]} ; {recreate_code(ast[2:])}'
-    elif node_type == 'boolean':
-        if(len(ast)<3):
-            return ast[1]
-        else:
-            return f'{ast[1]} ; {recreate_code(ast[2:])}'
-    elif node_type == 'var':
-        if(len(ast)<3):
-            return ast[1]
-        else:
-            return f'{ast[1]} ; {recreate_code(ast[2:])}'
-    elif node_type == 'statement_list': 
-        statements = [recreate_code(child) for child in ast[1:]]
-        return '{' + recreate_code(ast[1:]) + '}'
-    elif node_type == 'if':
-        condition = recreate_code(ast[1])
-        statement = recreate_code(ast[2:])
-        return f'if ({condition}) {statement}'
-    elif node_type == 'if_else':
-        condition = recreate_code(ast[1])
-        index = ast.index("else")
-        if_statement = recreate_code(ast[2:index+1])
-        else_statement = recreate_code(ast[index+1:])
-        return f'if ({condition}) {if_statement} else {else_statement}'
-    elif node_type == 'while':
-        condition = recreate_code(ast[1])
-        statement = recreate_code(ast[2:])
-        return f'while ({condition}) {statement}'
-    elif node_type == 'for': 
-        init_statement = recreate_code(ast[1:3])
-        condition = recreate_code(ast[4])
-        post_statement = recreate_code(ast[5:7])
-        statement = recreate_code(ast[7:])
-        return f'for ({init_statement}; {condition}; {post_statement}) {statement}'
-    elif node_type == 'function':
-        name = ast[1]
-        arg_name = ast[2]
-        statement = recreate_code(ast[3:])
-        return f'def {name}({arg_name}): {statement}'
-    elif node_type == 'call': 
-        name = ast[1]
-        if(len(ast)>2):
-            arg = ast[2]
-            return f'{name}({arg})'
-        else:
-            return f'{name}()'
-    elif node_type == 'return':
-        statement = recreate_code(ast[1:])
-        return f'return {statement}'
-    elif node_type == 'expr':
-        return recreate_code(ast[1][0:])
+            return ''
     else:
-        return ''
+            return ''
 
-
-declared_names = []
-
-# Função para gerar um nome válido
-def generate_valid_name():
-    valid_name = ""
-    while True:
-        valid_name = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=1))
-        if valid_name not in declared_names:
-            break
-    return valid_name
-
-
-# Função para gerar uma declaração aleatória
-def generate_declaration():
-    declaration = ""
-    statement_type = random.choice(['assign','list','if','if_else', 'while', 'for'])
-    if statement_type == 'assign':
-        declaration = generate_assign()
-    elif statement_type == 'list':
-        random_number = random.randint(2, 10)
-        declaration = "["
-        for _ in range(random_number):
-            declaration = declaration + generate_assign() + ";"
-        declaration = declaration + "]"
-    elif statement_type == 'if':
-        statement = generate_declaration()
-        cond = generate_cond()
-        declaration = f"if({cond}) {statement}"
-    elif statement_type == 'if_else':
-        statement1 = generate_declaration()
-        statement2 = generate_declaration()
-        cond = generate_cond()
-        declaration = f"if({cond}) {statement1} else {statement2}"
-    elif statement_type == 'while':
-        statement = generate_declaration()
-        cond = generate_cond()
-        declaration = f"while({cond}) {statement}"
-    elif statement_type == 'for':
-        statement = generate_declaration()
-        cond = generate_cond()
-        a1 = generate_assign()
-        a2 = generate_assign()
-        declaration = f"for({a1};{cond};{a2}) {statement}"
-    else:
-        declaration = generate_assign()
-        pass
-    return declaration
-
-def generate_assign():
-    name = generate_valid_name()
-    expression = generate_expression()
-    assingn = f"{name} = {expression}"
-    declared_names.append(name)
-    return assingn
-
-# Função para gerar uma expressão aleatória
-def generate_expression():
-    # Gera uma expressão simples para este exemplo
-    with_operation = random.choice(['true', 'false'])
-    if with_operation == 'true':
-        operation = random.choice(['+', '-','/','*'])
-        value1 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
-        value2 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
-        return value1 + operation + value2
-    else:
-        value = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
-        return str(value)
-    
-def generate_cond():
-    operation = random.choice(['<=', '<','>=','>','==','!='])
-    value1 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
-    value2 = ''.join(random.choices('abcdefghijklmnopqrstuvwxyz0123456789', k=1))
-    return value1 + operation + value2
-
-def generate_program(number):
-    program = ""
-    for _ in range(number):
-        declaration = generate_declaration()
-        program += declaration + "\n"
-    return program
-
-# Gera e exibe um programa de teste
-test_program = generate_program(2)
-print(test_program)
-
+"""
 while True:
     try:
         s = input('bc > ')
     except EOFError:
         break
-    p=parser.parse(s)
-    p=otimizacoes(list(p))
-    p=smells(list(p))
+    p=parser_var.parse(s)
+    #p=otimizacoes(list(p))
+    #p=smells(list(p))
     print(p)
     print(recreate_code(p))
+    """
