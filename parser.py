@@ -83,13 +83,8 @@ def p_statement_if_else(p):
     p[0] = p[0] + ('if_else',)
     p[0] = p[0] + (p[2],)
     p[0] = p[0] + (p[3],)
-    #for i in range(len(p[3])):
-    #    p[0]=p[0]+(p[3][i],)
     p[0] = p[0] + ('else',)
     p[0] = p[0] + (p[5],)
-    #for i in range(len(p[5])):
-    #    p[0]=p[0]+(p[5][i],)
-
 
 def p_statement_if(p):
     'statement : IF expression statement'
@@ -157,56 +152,100 @@ def p_error(p):
 
 parser_var = yacc.yacc()
 
-def make_optimizations(lst):
+
+
+def make_optimizations_td(lst):
     if "binop" == lst[0]:
         r=lst
         if(lst[1] == "*"):
             if ("0") == lst[2][1] or ("0") in lst[3][1]:
-                print("optimizations detected")
                 return ('number', '0')
             if ("1") == lst[2][1]:
-                print("optimizations detected")
-                return otimizacoes(lst[3])
+                return otimizacoes_td(lst[3])
             if ("1") == lst[3][1]:
-                print("optimizations detected")
-                return otimizacoes(lst[2]) 
+                return otimizacoes_td(lst[2]) 
        
             if "binop" == lst[2][0]:  
                 o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
-                opt=otimizacoes(o)  
+                opt=otimizacoes_td(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3]))))
+                    r=tuple(otimizacoes_td(list((lst[0],lst[1],opt,lst[3]))))
             
             if "binop" == lst[3][0]:  
                 o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
-                opt=otimizacoes(o)  
+                opt=otimizacoes_td(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))
+                    r=tuple(otimizacoes_td(list((lst[0],lst[1],lst[2],opt))))
 
         if(lst[1] == "/"):
             if ("1") == lst[3][1]:
-                print("optimizations detected")
-                return otimizacoes(lst[2])
+                return otimizacoes_td(lst[2])
 
         if(lst[1] == "+"):
             if ("0") == lst[2][1]:
-                print("optimizations detected")
-                return otimizacoes(lst[3])
+                return otimizacoes_td(lst[3])
             if ("0") == lst[3][1]:
-                print("optimizations detected")
-                return otimizacoes(lst[2])    
+                return otimizacoes_td(lst[2])    
              
             if "binop" == lst[2][0]:  
                 o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
-                opt=otimizacoes(o)  
+                opt=otimizacoes_td(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],opt,lst[3])))) 
+                    r=tuple(otimizacoes_td(list((lst[0],lst[1],opt,lst[3])))) 
 
             if "binop" == lst[3][0]:  
                 o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
-                opt=otimizacoes(o)  
+                opt=otimizacoes_td(o)  
                 if(opt!=o):
-                    r=tuple(otimizacoes(list((lst[0],lst[1],lst[2],opt))))
+                    r=tuple(otimizacoes_td(list((lst[0],lst[1],lst[2],opt))))
+        return r
+    else:
+        return lst
+
+def make_optimizations_bu(lst):
+    if "binop" == lst[0]:
+        r=lst
+        if(lst[1] == "*"):
+            if ("0") == lst[2][1] or ("0") in lst[3][1]:
+                return ('number', '0')
+            if ("1") == lst[2][1]:
+                return otimizacoes_bu(lst[3])
+            if ("1") == lst[3][1]:
+                return otimizacoes_bu(lst[2]) 
+       
+            if "binop" == lst[2][0]:  
+                o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
+                opt=otimizacoes_bu(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes_bu(list((lst[0],lst[1],opt,lst[3]))))
+            
+            if "binop" == lst[3][0]:  
+                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
+                opt=otimizacoes_bu(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes_bu(list((lst[0],lst[1],lst[2],opt))))
+
+        if(lst[1] == "/"):
+            if ("1") == lst[3][1]:
+                return otimizacoes_bu(lst[2])
+
+        if(lst[1] == "+"):
+            if ("0") == lst[2][1]:
+                return otimizacoes_bu(lst[3])
+            if ("0") == lst[3][1]:
+                return otimizacoes_bu(lst[2])    
+             
+            if "binop" == lst[2][0]:  
+                o=list((lst[2][0],lst[2][1],lst[2][2],lst[2][3]))
+                opt=otimizacoes_bu(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes_bu(list((lst[0],lst[1],opt,lst[3])))) 
+
+            if "binop" == lst[3][0]:  
+                o=list((lst[3][0],lst[3][1],lst[3][2],lst[3][3]))
+                opt=otimizacoes_bu(o)  
+                if(opt!=o):
+                    r=tuple(otimizacoes_bu(list((lst[0],lst[1],lst[2],opt))))
         return r
     else:
         return lst
@@ -218,20 +257,31 @@ def treat_smells(lst):
                 print("smells detected")
                 return (lst[3][0], lst[3][1])
             if((lst[3][0] == "boolean" and lst[2][0] == "var") or (lst[3][0] == "boolean" and lst[2][0] == "call")):
-                    print("smells detected")
-                    return (lst[2][0], lst[2][1])
+                print("smells detected")
+                return (lst[2][0], lst[2][1])
     if "function" == lst[0]:
         if(len(lst)>15):
             print("smells detected: big function")
     return lst
     
-def otimizacoes(lst):
+def otimizacoes_td(lst):
     z = zp.obj(lst)
-    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations, x), z).node()
+    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_td, x), z).node()
 
-def smells(lst):
+def otimizacoes_bu(lst):
+    z = zp.obj(lst)
+    return stra.full_buTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_bu, x), z).node()
+
+
+def smells_td(lst):
     z = zp.obj(lst)
     return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, treat_smells, x), z).node()
+
+def smells_bu(lst):
+    z = zp.obj(lst)
+    return stra.full_buTP(lambda x: stra.adhocTP(stra.idTP, treat_smells, x), z).node()
+
+
 
 def recreate_code(ast):
     if(len(ast)>0):
@@ -315,7 +365,7 @@ while True:
     except EOFError:
         break
     p=parser_var.parse(s)
-    #p=otimizacoes(list(p))
+    #p=otimizacoes_td(list(p))
     #p=smells(list(p))
     print(p)
     print(recreate_code(p))
