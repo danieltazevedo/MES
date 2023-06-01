@@ -357,16 +357,3 @@ def recreate_code(ast):
             return ''
     else:
             return ''
-
-"""
-while True:
-    try:
-        s = input('bc > ')
-    except EOFError:
-        break
-    p=parser_var.parse(s)
-    #p=otimizacoes_td(list(p))
-    #p=smells(list(p))
-    print(p)
-    print(recreate_code(p))
-    """

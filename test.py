@@ -22,7 +22,7 @@ def test_smells_strategy(number):
         parsing_output = parser_var.parse(elem)
 
         p_td=smells_td(list(parsing_output))
-        p_bu=smells_iner(list(parsing_output))
+        p_bu=smells_bu(list(parsing_output))
                
         assert p_td == p_bu
         
