@@ -154,7 +154,7 @@ parser_var = yacc.yacc()
 
 
 
-def make_optimizations_td(lst):
+def make_optimizations_td_bu(lst):
     if "binop" == lst[0]:
         r=lst
         if(lst[1] == "*"):
@@ -202,7 +202,7 @@ def make_optimizations_td(lst):
     else:
         return lst
 
-def make_optimizations_bu(lst):
+def make_optimizations_iner(lst):
     if "binop" == lst[0]:
         r=lst
         if(lst[1] == "*"):
@@ -246,9 +246,12 @@ def make_optimizations_bu(lst):
                 opt=otimizacoes_bu(o)  
                 if(opt!=o):
                     r=tuple(otimizacoes_bu(list((lst[0],lst[1],lst[2],opt))))
-        return r
+        if r == lst:  # Verifica se nenhuma otimização foi aplicada
+            raise ValueError("Falha ao otimizar o nó")
+        else:
+            return r
     else:
-        return lst
+        raise ValueError("Falha ao otimizar o nó")
     
 def treat_smells(lst):
     if "binop" == lst[0]:
@@ -263,14 +266,33 @@ def treat_smells(lst):
         if(len(lst)>15):
             print("smells detected: big function")
     return lst
+
+def treat_smells_iner(lst):
+    if "binop" == lst[0]:
+        if(lst[1] == "==" or lst[1] == "!="):
+            if((lst[2][0] == "boolean" and lst[3][0] == "var") or (lst[2][0] == "boolean" and lst[3][0] == "call") ): 
+                print("smells detected")
+                return (lst[3][0], lst[3][1])
+            if((lst[3][0] == "boolean" and lst[2][0] == "var") or (lst[3][0] == "boolean" and lst[2][0] == "call")):
+                print("smells detected")
+                return (lst[2][0], lst[2][1])
+    if "function" == lst[0]:
+        if(len(lst)>15):
+            print("smells detected: big function")
+    raise ValueError("Não foram detetados smells")
     
 def otimizacoes_td(lst):
     z = zp.obj(lst)
-    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_td, x), z).node()
+    return stra.full_tdTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_td_bu, x), z).node()
 
 def otimizacoes_bu(lst):
     z = zp.obj(lst)
-    return stra.full_buTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_bu, x), z).node()
+    return stra.full_buTP(lambda x: stra.adhocTP(stra.idTP, make_optimizations_td_bu, x), z).node()
+
+def otimizacoes_iner(lst):
+    z = zp.obj(lst)
+    return stra.innermost(lambda x: stra.adhocTP(stra.failTP, make_optimizations_iner, x), z).node()
+
 
 
 def smells_td(lst):
@@ -281,7 +303,9 @@ def smells_bu(lst):
     z = zp.obj(lst)
     return stra.full_buTP(lambda x: stra.adhocTP(stra.idTP, treat_smells, x), z).node()
 
-
+def smells_iner(lst):
+    z = zp.obj(lst)
+    return stra.innermost(lambda x: stra.adhocTP(stra.failTP, treat_smells_iner, x), z).node()
 
 def recreate_code(ast):
     if(len(ast)>0):
@@ -357,3 +381,4 @@ def recreate_code(ast):
             return ''
     else:
             return ''
+

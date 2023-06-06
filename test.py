@@ -23,8 +23,9 @@ def test_smells_strategy(number):
 
         p_td=smells_td(list(parsing_output))
         p_bu=smells_bu(list(parsing_output))
+        p_iner = smells_iner(list(parsing_output))
                
-        assert p_td == p_bu
+        assert p_td == p_bu == p_iner
         
 @settings(deadline=2000)
 @given(number=st.integers(min_value=500, max_value=1000))
@@ -35,8 +36,9 @@ def test_otimizacoes_strategy(number):
 
         p_td=otimizacoes_td(list(parsing_output))
         p_bu=otimizacoes_bu(list(parsing_output))
+        p_iner = otimizacoes_iner(list(parsing_output))
                
-        assert p_td == p_bu
+        assert p_td == p_bu == p_iner
 
 @settings(deadline=2000)
 @given(number=st.integers(min_value=500, max_value=1000))
